@@ -22,18 +22,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.kospace.data.repository.DummyAnakKosRepository
-import com.example.kospace.data.repository.DummyPembayaranRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.theme.*
 
 @Composable
 fun IbuKosDetailPenghuniScreen(
     memberId: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    viewModel: ManajemenPenghuniViewModel = viewModel()
 ) {
-    val penghuniList by DummyAnakKosRepository.penghuniAktif.collectAsStateWithLifecycle()
-    val monthStatuses by DummyPembayaranRepository.monthStatuses.collectAsStateWithLifecycle()
+    val penghuniList by viewModel.penghuniAktif.collectAsStateWithLifecycle()
+    val monthStatuses by viewModel.monthStatuses.collectAsStateWithLifecycle()
 
     val tenant = penghuniList.find { it.id == memberId }
 
@@ -206,7 +206,7 @@ fun IbuKosDetailPenghuniScreen(
 
                 OutlinedButton(
                     onClick = {
-                        DummyAnakKosRepository.keluarkanPenghuni(tenant.id)
+                        viewModel.keluarkanPenghuni(tenant.id)
                         onBackClick()
                     },
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = StatusRed),

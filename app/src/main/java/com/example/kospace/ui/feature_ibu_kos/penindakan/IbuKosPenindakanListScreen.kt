@@ -18,25 +18,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.repository.DummyKerusakanRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IbuKosPenindakanListScreen(
-    onNavigateToDetailPenindakan: (String) -> Unit
+    onNavigateToDetailPenindakan: (String) -> Unit,
+    viewModel: IbuKosPenindakanViewModel = viewModel()
 ) {
-    val laporanList by DummyKerusakanRepository.laporanList.collectAsStateWithLifecycle()
-    var selectedFilter by remember { mutableStateOf("Semua") }
-
-    val filteredList = remember(selectedFilter, laporanList) {
-        when (selectedFilter) {
-            "Diproses" -> laporanList.filter { it.status == "Diproses" || it.status == "Pending" }
-            "Selesai" -> laporanList.filter { it.status == "Selesai" }
-            else -> laporanList
-        }
-    }
+    val laporanList by viewModel.laporanList.collectAsStateWithLifecycle()
+    val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
+    val filteredList by viewModel.filteredList.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -70,7 +64,7 @@ fun IbuKosPenindakanListScreen(
 
                 FilterChip(
                     selected = isSelected,
-                    onClick = { selectedFilter = filterName },
+                    onClick = { viewModel.setFilter(filterName) },
                     label = { Text(filterText) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = PrimaryBlue,

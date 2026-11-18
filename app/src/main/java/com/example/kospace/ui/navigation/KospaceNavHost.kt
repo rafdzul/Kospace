@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.example.kospace.data.repository.DummyAuthRepository
 import com.example.kospace.navigation.*
 import com.example.kospace.ui.components.KospaceBottomBar
 import com.example.kospace.ui.feature_anak_kos.beranda.AnakKosBerandaScreen
@@ -40,8 +39,8 @@ import com.example.kospace.ui.feature_ibu_kos.profil.IbuKosProfilScreen
 fun KospaceNavHost(
     navController: NavHostController = rememberNavController()
 ) {
-    val currentUser by DummyAuthRepository.currentUser.collectAsStateWithLifecycle()
     val authViewModel: AuthViewModel = viewModel()
+    val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route

@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.kospace.data.repository.DummyKerusakanRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
@@ -28,9 +28,10 @@ import com.example.kospace.ui.theme.*
 @Composable
 fun IbuKosDetailPenindakanScreen(
     reportId: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    viewModel: IbuKosPenindakanViewModel = viewModel()
 ) {
-    val laporanList by DummyKerusakanRepository.laporanList.collectAsStateWithLifecycle()
+    val laporanList by viewModel.laporanList.collectAsStateWithLifecycle()
     val report = laporanList.find { it.id == reportId }
 
     var selectedStatus by remember(report) { mutableStateOf(report?.status ?: "Pending") }
@@ -233,7 +234,7 @@ fun IbuKosDetailPenindakanScreen(
 
                         Button(
                             onClick = {
-                                DummyKerusakanRepository.updateStatusPenanganan(
+                                viewModel.updateStatusPenanganan(
                                     id = report.id,
                                     statusBaru = selectedStatus,
                                     catatan = actionNoteInput.ifBlank { null }

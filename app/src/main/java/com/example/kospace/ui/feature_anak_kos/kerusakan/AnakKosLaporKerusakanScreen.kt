@@ -18,19 +18,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.model.LaporanKerusakan
-import com.example.kospace.data.repository.DummyAuthRepository
-import com.example.kospace.data.repository.DummyKerusakanRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.theme.*
 
 @Composable
 fun AnakKosLaporKerusakanScreen(
     onBackClick: () -> Unit,
-    onReportSubmitted: () -> Unit
+    onReportSubmitted: () -> Unit,
+    viewModel: KerusakanViewModel = viewModel()
 ) {
-    val currentUser by DummyAuthRepository.currentUser.collectAsStateWithLifecycle()
-
     var locationCategory by remember { mutableStateOf("Kamar Mandi Dalam") }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -150,20 +147,12 @@ fun AnakKosLaporKerusakanScreen(
                         Button(
                             onClick = {
                                 if (title.isNotBlank()) {
-                                    val report = LaporanKerusakan(
-                                        id = "${System.currentTimeMillis()}",
-                                        ticketCode = "REP-00${(4..99).random()}",
-                                        tenantId = currentUser?.id ?: "u2",
-                                        tenantName = currentUser?.name ?: "Dimas Saputra",
-                                        roomNumber = currentUser?.roomNumber ?: "Kamar 04",
+                                    viewModel.tambahLaporan(
                                         title = title,
-                                        categoryLocation = locationCategory,
+                                        locationCategory = locationCategory,
                                         description = description,
-                                        imageUrl = "damage_sample.jpg",
-                                        status = "Pending",
-                                        reportDate = "Hari ini, Baru saja"
+                                        imageUrl = "damage_sample.jpg"
                                     )
-                                    DummyKerusakanRepository.tambahLaporan(report)
                                     onReportSubmitted()
                                 }
                             },

@@ -20,15 +20,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.repository.DummyAnakKosRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.theme.*
 
 @Composable
 fun IbuKosKonfirmasiPendaftaranScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    viewModel: ManajemenPenghuniViewModel = viewModel()
 ) {
-    val pendingList by DummyAnakKosRepository.pengajuanPending.collectAsStateWithLifecycle()
+    val pendingList by viewModel.pengajuanPending.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -113,7 +114,7 @@ fun IbuKosKonfirmasiPendaftaranScreen(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     OutlinedButton(
-                                        onClick = { DummyAnakKosRepository.tolakPendaftaran(user.id) },
+                                        onClick = { viewModel.tolakPendaftaran(user.id) },
                                         colors = ButtonDefaults.outlinedButtonColors(contentColor = StatusRed),
                                         shape = RoundedCornerShape(8.dp),
                                         modifier = Modifier
@@ -126,7 +127,7 @@ fun IbuKosKonfirmasiPendaftaranScreen(
                                     }
 
                                     Button(
-                                        onClick = { DummyAnakKosRepository.terimaPendaftaran(user.id) },
+                                        onClick = { viewModel.terimaPendaftaran(user.id) },
                                         colors = ButtonDefaults.buttonColors(containerColor = StatusGreen),
                                         shape = RoundedCornerShape(8.dp),
                                         modifier = Modifier

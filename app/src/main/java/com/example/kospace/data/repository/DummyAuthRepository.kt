@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-object DummyAuthRepository {
+object DummyAuthRepository : AuthRepository {
     private val anakKosUser = User(
         id = "u2",
         name = "Dimas Saputra",
@@ -29,14 +29,14 @@ object DummyAuthRepository {
     )
 
     private val _currentUser = MutableStateFlow<User?>(anakKosUser)
-    val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
+    override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
-    fun login(emailOrPhone: String, role: String): Boolean {
+    override fun login(emailOrPhone: String, role: String): Boolean {
         _currentUser.value = if (role == "IBU_KOS") ibuKosUser else anakKosUser
         return true
     }
 
-    fun register(name: String, email: String, phone: String, roomNumber: String?, role: String) {
+    override fun register(name: String, email: String, phone: String, roomNumber: String?, role: String) {
         val newUser = User(
             id = "u_${System.currentTimeMillis()}",
             name = name,
@@ -50,11 +50,11 @@ object DummyAuthRepository {
         _currentUser.value = newUser
     }
 
-    fun logout() {
+    override fun logout() {
         _currentUser.value = null
     }
 
-    fun switchRole(role: String) {
+    override fun switchRole(role: String) {
         _currentUser.value = if (role == "IBU_KOS") ibuKosUser else anakKosUser
     }
 }

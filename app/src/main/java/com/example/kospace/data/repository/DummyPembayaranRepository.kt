@@ -1,18 +1,13 @@
 package com.example.kospace.data.repository
 
+import com.example.kospace.data.model.MonthStatus
 import com.example.kospace.data.model.PembayaranKos
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-data class MonthStatus(
-    val monthName: String,
-    val monthNumber: Int,
-    val isPaid: Boolean
-)
-
-object DummyPembayaranRepository {
+object DummyPembayaranRepository : PembayaranRepository {
     private val _monthStatuses = MutableStateFlow(
         listOf(
             MonthStatus("Jan", 1, true),
@@ -29,7 +24,7 @@ object DummyPembayaranRepository {
             MonthStatus("Des", 12, false)
         )
     )
-    val monthStatuses: StateFlow<List<MonthStatus>> = _monthStatuses.asStateFlow()
+    override val monthStatuses: StateFlow<List<MonthStatus>> = _monthStatuses.asStateFlow()
 
     private val _riwayatPembayaran = MutableStateFlow(
         listOf(
@@ -59,9 +54,9 @@ object DummyPembayaranRepository {
             )
         )
     )
-    val riwayatPembayaran: StateFlow<List<PembayaranKos>> = _riwayatPembayaran.asStateFlow()
+    override val riwayatPembayaran: StateFlow<List<PembayaranKos>> = _riwayatPembayaran.asStateFlow()
 
-    fun kirimBuktiBayar(pembayaran: PembayaranKos) {
+    override fun kirimBuktiBayar(pembayaran: PembayaranKos) {
         _riwayatPembayaran.update { list -> listOf(pembayaran) + list }
         // Update month status
         _monthStatuses.update { list ->

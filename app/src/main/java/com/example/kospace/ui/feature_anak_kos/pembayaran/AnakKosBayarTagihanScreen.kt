@@ -18,9 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.model.PembayaranKos
-import com.example.kospace.data.repository.DummyAuthRepository
-import com.example.kospace.data.repository.DummyPembayaranRepository
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.theme.*
 
@@ -29,9 +28,10 @@ fun AnakKosBayarTagihanScreen(
     bulan: String,
     nominal: Double,
     onBackClick: () -> Unit,
-    onPaymentSubmitted: () -> Unit
+    onPaymentSubmitted: () -> Unit,
+    viewModel: PembayaranViewModel = viewModel()
 ) {
-    val currentUser by DummyAuthRepository.currentUser.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     var selectedBulan by remember { mutableStateOf(bulan) }
     var nominalInput by remember { mutableStateOf(nominal.toLong().toString()) }
@@ -165,19 +165,11 @@ fun AnakKosBayarTagihanScreen(
                         Button(
                             onClick = {
                                 val amountVal = nominalInput.toDoubleOrNull() ?: 1500000.0
-                                val payment = PembayaranKos(
-                                    id = "p_${System.currentTimeMillis()}",
-                                    tenantId = currentUser?.id ?: "u2",
-                                    tenantName = currentUser?.name ?: "Dimas Saputra",
-                                    roomNumber = currentUser?.roomNumber ?: "Kamar 04",
+                                viewModel.kirimBuktiBayar(
                                     monthPeriod = selectedBulan,
                                     amount = amountVal,
-                                    paymentDate = "Hari ini",
-                                    status = "Lunas",
-                                    proofImageUrl = "proof_sample.jpg",
-                                    note = note.ifBlank { null }
+                                    note = note
                                 )
-                                DummyPembayaranRepository.kirimBuktiBayar(payment)
                                 onPaymentSubmitted()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),

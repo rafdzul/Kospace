@@ -20,24 +20,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.repository.DummyAuthRepository
-import com.example.kospace.data.repository.DummyKulkasRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.theme.*
 
 @Composable
 fun AnakKosKulkasScreen(
-    onNavigateToTambahKulkas: () -> Unit
+    onNavigateToTambahKulkas: () -> Unit,
+    viewModel: KulkasViewModel = viewModel()
 ) {
-    val currentUser by DummyAuthRepository.currentUser.collectAsStateWithLifecycle()
-    val items by DummyKulkasRepository.items.collectAsStateWithLifecycle()
-
-    var selectedTab by remember { mutableIntStateOf(0) } // 0: Semua Barang, 1: Barang Saya
-
-    val filteredItems = remember(selectedTab, items, currentUser) {
-        if (selectedTab == 1) {
-            items.filter { it.ownerId == currentUser?.id }
-        } else items
-    }
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
+    val filteredItems by viewModel.filteredItems.collectAsStateWithLifecycle()
+    val allItemsCount by viewModel.allItemsCount.collectAsStateWithLifecycle()
+    val myItemCount by viewModel.myItemCount.collectAsStateWithLifecycle()
 
     Scaffold(
         floatingActionButton = {
@@ -76,10 +71,10 @@ fun AnakKosKulkasScreen(
             ) {
                 Tab(
                     selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
+                    onClick = { viewModel.setTab(0) },
                     text = {
                         Text(
-                            text = "Semua Barang (${items.size})",
+                            text = "Semua Barang ($allItemsCount)",
                             fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
                             color = if (selectedTab == 0) PrimaryBlue else TextSecondary
                         )
@@ -87,11 +82,10 @@ fun AnakKosKulkasScreen(
                 )
                 Tab(
                     selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
+                    onClick = { viewModel.setTab(1) },
                     text = {
-                        val myCount = items.count { it.ownerId == currentUser?.id }
                         Text(
-                            text = "Barang Saya ($myCount)",
+                            text = "Barang Saya ($myItemCount)",
                             fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
                             color = if (selectedTab == 1) PrimaryBlue else TextSecondary
                         )
@@ -185,7 +179,7 @@ fun AnakKosKulkasScreen(
                                     if (isMine) {
                                         Spacer(modifier = Modifier.height(4.dp))
                                         IconButton(
-                                            onClick = { DummyKulkasRepository.hapusItem(item.id) },
+                                            onClick = { viewModel.hapusItem(item.id) },
                                             modifier = Modifier.size(28.dp)
                                         ) {
                                             Icon(

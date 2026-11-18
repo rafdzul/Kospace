@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.repository.DummyKerusakanRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
@@ -22,9 +22,10 @@ import com.example.kospace.ui.theme.*
 @Composable
 fun AnakKosDetailKerusakanScreen(
     reportId: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    viewModel: KerusakanViewModel = viewModel()
 ) {
-    val laporanList by DummyKerusakanRepository.laporanList.collectAsStateWithLifecycle()
+    val laporanList by viewModel.laporanList.collectAsStateWithLifecycle()
     val report = laporanList.find { it.id == reportId }
 
     Scaffold(
@@ -171,7 +172,7 @@ fun AnakKosDetailKerusakanScreen(
                         if (report.status != "Selesai") {
                             OutlinedButton(
                                 onClick = {
-                                    DummyKerusakanRepository.batalkanLaporan(report.id)
+                                    viewModel.batalkanLaporan(report.id)
                                     onBackClick()
                                 },
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = StatusRed),

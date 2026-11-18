@@ -22,9 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.repository.DummyAnakKosRepository
-import com.example.kospace.data.repository.DummyAuthRepository
-import com.example.kospace.data.repository.DummyKerusakanRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
 
@@ -32,14 +30,14 @@ import com.example.kospace.ui.theme.*
 fun IbuKosBerandaScreen(
     onNavigateToPenindakan: () -> Unit,
     onNavigateToManajemen: () -> Unit,
-    onNavigateToKonfirmasi: () -> Unit
+    onNavigateToKonfirmasi: () -> Unit,
+    viewModel: IbuKosBerandaViewModel = viewModel()
 ) {
-    val user by DummyAuthRepository.currentUser.collectAsStateWithLifecycle()
-    val kerusakanList by DummyKerusakanRepository.laporanList.collectAsStateWithLifecycle()
-    val penghuniList by DummyAnakKosRepository.penghuniAktif.collectAsStateWithLifecycle()
-    val pendingList by DummyAnakKosRepository.pengajuanPending.collectAsStateWithLifecycle()
-
-    val pendingReportCount = kerusakanList.count { it.status == "Pending" || it.status == "Diproses" }
+    val user by viewModel.currentUser.collectAsStateWithLifecycle()
+    val kerusakanList by viewModel.kerusakanList.collectAsStateWithLifecycle()
+    val penghuniList by viewModel.penghuniList.collectAsStateWithLifecycle()
+    val pendingList by viewModel.pendingList.collectAsStateWithLifecycle()
+    val pendingReportCount by viewModel.pendingReportCount.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier

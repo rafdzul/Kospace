@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-object DummyKerusakanRepository {
+object DummyKerusakanRepository : KerusakanRepository {
     private val _laporanList = MutableStateFlow(
         listOf(
             LaporanKerusakan(
@@ -49,9 +49,9 @@ object DummyKerusakanRepository {
             )
         )
     )
-    val laporanList: StateFlow<List<LaporanKerusakan>> = _laporanList.asStateFlow()
+    override val laporanList: StateFlow<List<LaporanKerusakan>> = _laporanList.asStateFlow()
 
-    fun updateStatusPenanganan(id: String, statusBaru: String, catatan: String?) {
+    override fun updateStatusPenanganan(id: String, statusBaru: String, catatan: String?) {
         _laporanList.update { list ->
             list.map { item ->
                 if (item.id == id) {
@@ -61,11 +61,11 @@ object DummyKerusakanRepository {
         }
     }
 
-    fun tambahLaporan(laporan: LaporanKerusakan) {
+    override fun tambahLaporan(laporan: LaporanKerusakan) {
         _laporanList.update { list -> listOf(laporan) + list }
     }
 
-    fun batalkanLaporan(id: String) {
+    override fun batalkanLaporan(id: String) {
         _laporanList.update { list -> list.filterNot { it.id == id } }
     }
 }
