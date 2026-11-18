@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Kospace</string>
+    <string name="app_tagline">Aplikasi Manajemen Kos Terintegrasi</string>
+    
+    <!-- Roles -->
+    <string name="role_anak_kos">Anak Kos</string>
+    <string name="role_ibu_kos">Ibu Kos</string>
+    
+    <!-- Actions -->
+    <string name="action_login">Masuk Akun</string>
+    <string name="action_register">Daftar Akun</string>
+    <string name="action_logout">Keluar dari Akun</string>
+    <string name="action_save">Simpan</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_submit">Kirim</string>
+    <string name="action_close">Tutup</string>
+    <string name="action_back">Kembali</string>
+    
+    <!-- Features -->
+    <string name="title_home">Beranda</string>
+    <string name="title_payment">Status Sewa &amp; Pembayaran</string>
+    <string name="title_fridge">Inventaris Kulkas Bersama</string>
+    <string name="title_damage_report">Laporan Kerusakan Kos</string>
+    <string name="title_tenant_management">Manajemen Anak Kos</string>
+    <string name="title_profile">Profil</string>
+</resources>
