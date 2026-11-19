@@ -28,7 +28,7 @@ object DummyAuthRepository : AuthRepository {
         statusPenghuni = "Aktif"
     )
 
-    private val _currentUser = MutableStateFlow<User?>(anakKosUser)
+    private val _currentUser = MutableStateFlow<User?>(null)
     override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
     override fun login(emailOrPhone: String, role: String): Boolean {
