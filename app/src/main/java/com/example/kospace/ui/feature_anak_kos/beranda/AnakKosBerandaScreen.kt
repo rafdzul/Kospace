@@ -19,10 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.repository.DummyAuthRepository
-import com.example.kospace.data.repository.DummyKerusakanRepository
-import com.example.kospace.data.repository.DummyKulkasRepository
-import com.example.kospace.data.repository.DummyPembayaranRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
 
@@ -30,16 +27,13 @@ import com.example.kospace.ui.theme.*
 fun AnakKosBerandaScreen(
     onNavigateToPembayaran: () -> Unit,
     onNavigateToKulkas: () -> Unit,
-    onNavigateToKerusakan: () -> Unit
+    onNavigateToKerusakan: () -> Unit,
+    viewModel: AnakKosBerandaViewModel = viewModel()
 ) {
-    val user by DummyAuthRepository.currentUser.collectAsStateWithLifecycle()
-    val kerusakanList by DummyKerusakanRepository.laporanList.collectAsStateWithLifecycle()
-    val kulkasItems by DummyKulkasRepository.items.collectAsStateWithLifecycle()
-    val monthStatuses by DummyPembayaranRepository.monthStatuses.collectAsStateWithLifecycle()
-
-    val currentMonthPaid = monthStatuses.find { it.monthNumber == 11 }?.isPaid == true
-    val myActiveReport = kerusakanList.firstOrNull { it.status != "Selesai" }
-    val myFridgeItems = kulkasItems.filter { it.ownerId == user?.id }
+    val user by viewModel.currentUser.collectAsStateWithLifecycle()
+    val currentMonthPaid by viewModel.isCurrentMonthPaid.collectAsStateWithLifecycle()
+    val myActiveReport by viewModel.myActiveReport.collectAsStateWithLifecycle()
+    val myFridgeItems by viewModel.myFridgeItems.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -159,16 +153,17 @@ fun AnakKosBerandaScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
+                val activeReport = myActiveReport
                 Column(modifier = Modifier.weight(1f)) {
-                    if (myActiveReport != null) {
+                    if (activeReport != null) {
                         Text(
-                            text = myActiveReport.title,
+                            text = activeReport.title,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = TextPrimary
                         )
                         Text(
-                            text = myActiveReport.categoryLocation,
+                            text = activeReport.categoryLocation,
                             fontSize = 12.sp,
                             color = TextSecondary
                         )
@@ -187,8 +182,8 @@ fun AnakKosBerandaScreen(
                     }
                 }
 
-                if (myActiveReport != null) {
-                    StatusBadge(status = myActiveReport.status)
+                if (activeReport != null) {
+                    StatusBadge(status = activeReport.status)
                 } else {
                     Icon(
                         imageVector = Icons.Default.ChevronRight,

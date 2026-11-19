@@ -19,10 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.kospace.data.model.ItemKulkas
-import com.example.kospace.data.repository.DummyAuthRepository
-import com.example.kospace.data.repository.DummyKulkasRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.theme.*
 
@@ -30,10 +27,9 @@ import com.example.kospace.ui.theme.*
 @Composable
 fun AnakKosTambahKulkasScreen(
     onBackClick: () -> Unit,
-    onItemAdded: () -> Unit
+    onItemAdded: () -> Unit,
+    viewModel: KulkasViewModel = viewModel()
 ) {
-    val currentUser by DummyAuthRepository.currentUser.collectAsStateWithLifecycle()
-
     var itemName by remember { mutableStateOf("") }
     var quantity by remember { mutableIntStateOf(1) }
     var unit by remember { mutableStateOf("Botol") }
@@ -225,19 +221,13 @@ fun AnakKosTambahKulkasScreen(
                         Button(
                             onClick = {
                                 if (itemName.isNotBlank()) {
-                                    val item = ItemKulkas(
-                                        id = "k_${System.currentTimeMillis()}",
-                                        ownerId = currentUser?.id ?: "u2",
-                                        ownerName = currentUser?.name ?: "Dimas Saputra",
-                                        roomNumber = currentUser?.roomNumber ?: "Kamar 04",
+                                    viewModel.tambahItem(
                                         itemName = itemName,
                                         quantity = quantity,
                                         unit = unit,
                                         expirationDate = expirationDate,
-                                        note = note.ifBlank { null },
-                                        addedDate = "Hari ini"
+                                        note = note
                                     )
-                                    DummyKulkasRepository.tambahItem(item)
                                     onItemAdded()
                                 }
                             },

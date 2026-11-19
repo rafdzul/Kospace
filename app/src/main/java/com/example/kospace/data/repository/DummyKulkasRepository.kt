@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-object DummyKulkasRepository {
+object DummyKulkasRepository : KulkasRepository {
     private val _items = MutableStateFlow(
         listOf(
             ItemKulkas(
@@ -59,13 +59,13 @@ object DummyKulkasRepository {
             )
         )
     )
-    val items: StateFlow<List<ItemKulkas>> = _items.asStateFlow()
+    override val items: StateFlow<List<ItemKulkas>> = _items.asStateFlow()
 
-    fun tambahItem(item: ItemKulkas) {
+    override fun tambahItem(item: ItemKulkas) {
         _items.update { list -> listOf(item) + list }
     }
 
-    fun hapusItem(id: String) {
+    override fun hapusItem(id: String) {
         _items.update { list -> list.filterNot { it.id == id } }
     }
 }

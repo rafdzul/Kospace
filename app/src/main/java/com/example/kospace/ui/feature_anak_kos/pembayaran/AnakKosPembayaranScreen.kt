@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.kospace.data.repository.DummyPembayaranRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
 import java.text.NumberFormat
@@ -26,10 +26,11 @@ import java.util.Locale
 
 @Composable
 fun AnakKosPembayaranScreen(
-    onNavigateToBayarTagihan: (String, Double) -> Unit
+    onNavigateToBayarTagihan: (String, Double) -> Unit,
+    viewModel: PembayaranViewModel = viewModel()
 ) {
-    val monthStatuses by DummyPembayaranRepository.monthStatuses.collectAsStateWithLifecycle()
-    val riwayatPembayaran by DummyPembayaranRepository.riwayatPembayaran.collectAsStateWithLifecycle()
+    val monthStatuses by viewModel.monthStatuses.collectAsStateWithLifecycle()
+    val riwayatPembayaran by viewModel.riwayatPembayaran.collectAsStateWithLifecycle()
 
     var showProofDialog by remember { mutableStateOf<String?>(null) }
     val rupiahFormatter = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }

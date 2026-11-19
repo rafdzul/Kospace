@@ -22,17 +22,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.repository.DummyAnakKosRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
 
 @Composable
 fun IbuKosManajemenPenghuniScreen(
     onNavigateToKonfirmasi: () -> Unit,
-    onNavigateToDetailPenghuni: (String) -> Unit
+    onNavigateToDetailPenghuni: (String) -> Unit,
+    viewModel: ManajemenPenghuniViewModel = viewModel()
 ) {
-    val penghuniAktif by DummyAnakKosRepository.penghuniAktif.collectAsStateWithLifecycle()
-    val pengajuanPending by DummyAnakKosRepository.pengajuanPending.collectAsStateWithLifecycle()
+    val penghuniAktif by viewModel.penghuniAktif.collectAsStateWithLifecycle()
+    val pengajuanPending by viewModel.pengajuanPending.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier

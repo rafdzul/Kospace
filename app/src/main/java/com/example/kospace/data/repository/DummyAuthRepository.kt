@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-object DummyAuthRepository {
+object DummyAuthRepository : AuthRepository {
     private val anakKosUser = User(
         id = "u2",
         name = "Dimas Saputra",
@@ -28,15 +28,23 @@ object DummyAuthRepository {
         statusPenghuni = "Aktif"
     )
 
-    private val _currentUser = MutableStateFlow<User?>(anakKosUser)
-    val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
+    private val _currentUser = MutableStateFlow<User?>(null)
+    override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
-    fun login(emailOrPhone: String, role: String): Boolean {
-        _currentUser.value = if (role == "IBU_KOS") ibuKosUser else anakKosUser
-        return true
+    override fun login(emailOrPhone: String, role: String): Boolean {
+        val cleanInput = emailOrPhone.trim()
+        if (role == "IBU_KOS" && (cleanInput.equals(ibuKosUser.email, ignoreCase = true) || cleanInput == ibuKosUser.phone)) {
+            _currentUser.value = ibuKosUser
+            return true
+        }
+        if (role == "ANAK_KOS" && (cleanInput.equals(anakKosUser.email, ignoreCase = true) || cleanInput == anakKosUser.phone)) {
+            _currentUser.value = anakKosUser
+            return true
+        }
+        return false
     }
 
-    fun register(name: String, email: String, phone: String, roomNumber: String?, role: String) {
+    override fun register(name: String, email: String, phone: String, roomNumber: String?, role: String) {
         val newUser = User(
             id = "u_${System.currentTimeMillis()}",
             name = name,
@@ -50,11 +58,11 @@ object DummyAuthRepository {
         _currentUser.value = newUser
     }
 
-    fun logout() {
+    override fun logout() {
         _currentUser.value = null
     }
 
-    fun switchRole(role: String) {
+    override fun switchRole(role: String) {
         _currentUser.value = if (role == "IBU_KOS") ibuKosUser else anakKosUser
     }
 }

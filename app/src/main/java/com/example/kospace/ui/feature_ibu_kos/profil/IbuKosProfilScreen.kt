@@ -21,14 +21,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kospace.data.repository.DummyAuthRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kospace.ui.feature_auth.AuthViewModel
 import com.example.kospace.ui.theme.*
 
 @Composable
 fun IbuKosProfilScreen(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    viewModel: AuthViewModel = viewModel()
 ) {
-    val currentUser by DummyAuthRepository.currentUser.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -138,7 +140,7 @@ fun IbuKosProfilScreen(
 
         Button(
             onClick = {
-                DummyAuthRepository.logout()
+                viewModel.logout()
                 onLogout()
             },
             colors = ButtonDefaults.buttonColors(containerColor = StatusRedContainer, contentColor = StatusRed),

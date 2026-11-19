@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-object DummyAnakKosRepository {
+object DummyAnakKosRepository : AnakKosRepository {
     private val _penghuniAktif = MutableStateFlow(
         listOf(
             User(
@@ -47,7 +47,7 @@ object DummyAnakKosRepository {
             )
         )
     )
-    val penghuniAktif: StateFlow<List<User>> = _penghuniAktif.asStateFlow()
+    override val penghuniAktif: StateFlow<List<User>> = _penghuniAktif.asStateFlow()
 
     private val _pengajuanPending = MutableStateFlow(
         listOf(
@@ -71,9 +71,9 @@ object DummyAnakKosRepository {
             )
         )
     )
-    val pengajuanPending: StateFlow<List<User>> = _pengajuanPending.asStateFlow()
+    override val pengajuanPending: StateFlow<List<User>> = _pengajuanPending.asStateFlow()
 
-    fun terimaPendaftaran(userId: String) {
+    override fun terimaPendaftaran(userId: String) {
         val target = _pengajuanPending.value.find { it.id == userId }
         if (target != null) {
             _pengajuanPending.update { list -> list.filterNot { it.id == userId } }
@@ -81,11 +81,11 @@ object DummyAnakKosRepository {
         }
     }
 
-    fun tolakPendaftaran(userId: String) {
+    override fun tolakPendaftaran(userId: String) {
         _pengajuanPending.update { list -> list.filterNot { it.id == userId } }
     }
 
-    fun keluarkanPenghuni(userId: String) {
+    override fun keluarkanPenghuni(userId: String) {
         _penghuniAktif.update { list -> list.filterNot { it.id == userId } }
     }
 }
