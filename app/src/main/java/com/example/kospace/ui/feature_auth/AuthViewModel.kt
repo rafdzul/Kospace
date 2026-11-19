@@ -19,7 +19,6 @@ class AuthViewModel(
 
     fun selectRole(role: String) {
         _selectedRole.value = role
-        authRepository.switchRole(role)
     }
 
     fun login(emailOrPhone: String, password: String): Boolean {

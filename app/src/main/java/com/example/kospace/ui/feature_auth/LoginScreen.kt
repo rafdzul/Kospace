@@ -34,8 +34,8 @@ fun LoginScreen(
 ) {
     val selectedRole by viewModel.selectedRole.collectAsStateWithLifecycle()
 
-    var emailOrPhone by remember { mutableStateOf("dimas@gmail.com") }
-    var password by remember { mutableStateOf("password123") }
+    var emailOrPhone by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -89,8 +89,14 @@ fun LoginScreen(
 
                     OutlinedTextField(
                         value = emailOrPhone,
-                        onValueChange = { emailOrPhone = it },
+                        onValueChange = { 
+                            emailOrPhone = it
+                            errorMessage = null 
+                        },
                         label = { Text("Email / Nomor HP") },
+                        placeholder = { 
+                            Text(if (selectedRole == "IBU_KOS") "ibu.maryam@kospace.com" else "dimas@gmail.com") 
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -99,7 +105,10 @@ fun LoginScreen(
 
                     OutlinedTextField(
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = { 
+                            password = it
+                            errorMessage = null 
+                        },
                         label = { Text("Kata Sandi") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -111,6 +120,25 @@ fun LoginScreen(
                                 Icon(imageVector = image, contentDescription = null)
                             }
                         }
+                    )
+
+                    // Helper isi akun demo untuk kemudahan pengujian
+                    Text(
+                        text = if (selectedRole == "IBU_KOS") "💡 Coba akun demo Ibu Kos (Hj. Maryam)" else "💡 Coba akun demo Anak Kos (Dimas)",
+                        fontSize = 11.sp,
+                        color = PrimaryBlue,
+                        modifier = Modifier
+                            .padding(top = 6.dp)
+                            .clickable {
+                                if (selectedRole == "IBU_KOS") {
+                                    emailOrPhone = "ibu.maryam@kospace.com"
+                                    password = "password123"
+                                } else {
+                                    emailOrPhone = "dimas@gmail.com"
+                                    password = "password123"
+                                }
+                                errorMessage = null
+                            }
                     )
 
                     Row(
@@ -150,11 +178,15 @@ fun LoginScreen(
 
                     Button(
                         onClick = {
-                            val success = viewModel.login(emailOrPhone, password)
+                            if (emailOrPhone.isBlank() || password.isBlank()) {
+                                errorMessage = "Email/Nomor HP dan kata sandi wajib diisi"
+                                return@Button
+                            }
+                            val success = viewModel.login(emailOrPhone.trim(), password)
                             if (success) {
                                 onLoginSuccess(selectedRole)
                             } else {
-                                errorMessage = "Email/No HP & Password wajib diisi"
+                                errorMessage = "Akun tidak ditemukan atau tidak sesuai peran ${if (selectedRole == "IBU_KOS") "Ibu Kos" else "Anak Kos"}."
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),

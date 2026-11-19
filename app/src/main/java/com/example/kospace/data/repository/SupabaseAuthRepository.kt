@@ -52,17 +52,41 @@ object SupabaseAuthRepository : AuthRepository {
                             }
                         }
                         .decodeList<User>()
-                    foundUser = users.firstOrNull { it.email.equals(emailOrPhone, ignoreCase = true) || it.phone == emailOrPhone }
+                    foundUser = users.firstOrNull { 
+                        it.email.equals(emailOrPhone.trim(), ignoreCase = true) || it.phone.trim() == emailOrPhone.trim() 
+                    }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
 
-            _currentUser.value = foundUser ?: if (role == "IBU_KOS") defaultIbuKos else defaultAnakKos
-            true
+            if (foundUser != null) {
+                _currentUser.value = foundUser
+                true
+            } else {
+                // Verifikasi akun demo bawaan sebagai fallback jika offline / belum ada di database
+                val isDemoIbu = role == "IBU_KOS" && (
+                    emailOrPhone.trim().equals(defaultIbuKos.email, ignoreCase = true) || 
+                    emailOrPhone.trim() == defaultIbuKos.phone
+                )
+                val isDemoAnak = role == "ANAK_KOS" && (
+                    emailOrPhone.trim().equals(defaultAnakKos.email, ignoreCase = true) || 
+                    emailOrPhone.trim() == defaultAnakKos.phone
+                )
+
+                if (isDemoIbu) {
+                    _currentUser.value = defaultIbuKos
+                    true
+                } else if (isDemoAnak) {
+                    _currentUser.value = defaultAnakKos
+                    true
+                } else {
+                    false
+                }
+            }
         } catch (e: Exception) {
-            _currentUser.value = if (role == "IBU_KOS") defaultIbuKos else defaultAnakKos
-            true
+            e.printStackTrace()
+            false
         }
     }
 

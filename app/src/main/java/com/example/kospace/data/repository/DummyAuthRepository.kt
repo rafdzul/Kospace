@@ -32,8 +32,16 @@ object DummyAuthRepository : AuthRepository {
     override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
     override fun login(emailOrPhone: String, role: String): Boolean {
-        _currentUser.value = if (role == "IBU_KOS") ibuKosUser else anakKosUser
-        return true
+        val cleanInput = emailOrPhone.trim()
+        if (role == "IBU_KOS" && (cleanInput.equals(ibuKosUser.email, ignoreCase = true) || cleanInput == ibuKosUser.phone)) {
+            _currentUser.value = ibuKosUser
+            return true
+        }
+        if (role == "ANAK_KOS" && (cleanInput.equals(anakKosUser.email, ignoreCase = true) || cleanInput == anakKosUser.phone)) {
+            _currentUser.value = anakKosUser
+            return true
+        }
+        return false
     }
 
     override fun register(name: String, email: String, phone: String, roomNumber: String?, role: String) {

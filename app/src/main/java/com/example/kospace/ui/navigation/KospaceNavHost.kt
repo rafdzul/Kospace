@@ -84,9 +84,13 @@ fun KospaceNavHost(
             }
         }
     ) { innerPadding ->
+        val initialStartDestination = remember {
+            if (!isLoggedIn) LoginRoute else if (role == UserRole.IBU_KOS.name) IbuKosBerandaRoute else AnakKosBerandaRoute
+        }
+
         NavHost(
             navController = navController,
-            startDestination = if (!isLoggedIn) LoginRoute else if (role == UserRole.IBU_KOS.name) IbuKosBerandaRoute else AnakKosBerandaRoute,
+            startDestination = initialStartDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
             // AUTH
