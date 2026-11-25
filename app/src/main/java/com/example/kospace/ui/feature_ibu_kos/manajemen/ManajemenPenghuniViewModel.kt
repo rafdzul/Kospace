@@ -26,6 +26,10 @@ class ManajemenPenghuniViewModel(
         pembayaranRepository.refresh()
     }
 
+    fun refresh() {
+        anakKosRepository.refresh()
+    }
+
     fun getPenghuniById(id: String): User? {
         return penghuniAktif.value.find { it.id == id }
     }
