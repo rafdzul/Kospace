@@ -139,6 +139,14 @@ fun AnakKosKerusakanListScreen(
                                 )
 
                                 Text(
+                                    text = "Pelapor: ${item.tenantName}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = PrimaryBlue,
+                                    modifier = Modifier.padding(top = 3.dp)
+                                )
+
+                                Text(
                                     text = item.description,
                                     fontSize = 12.sp,
                                     color = TextSecondary,
