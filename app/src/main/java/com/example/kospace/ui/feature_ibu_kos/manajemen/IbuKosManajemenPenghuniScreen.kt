@@ -19,10 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kospace.data.model.MonthPeriodHelper
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
 
@@ -34,6 +34,11 @@ fun IbuKosManajemenPenghuniScreen(
 ) {
     val penghuniAktif by viewModel.penghuniAktif.collectAsStateWithLifecycle()
     val pengajuanPending by viewModel.pengajuanPending.collectAsStateWithLifecycle()
+    val riwayatPembayaran by viewModel.riwayatPembayaran.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     Column(
         modifier = Modifier
@@ -135,7 +140,21 @@ fun IbuKosManajemenPenghuniScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(penghuniAktif, key = { it.id }) { user ->
-                    val statusSewa = if (user.id == "u3") "Tunggak" else "Lunas"
+                    // Hitung status sewa berdasarkan pembayaran real di tahun berjalan
+                    val userPayments = remember(riwayatPembayaran) {
+                        riwayatPembayaran.filter { it.tenantId == user.id }
+                    }
+                    val currentYear = MonthPeriodHelper.currentYear()
+                    val paidCount = remember(userPayments) {
+                        (1..12).count { month ->
+                            MonthPeriodHelper.isMonthPaidInPayments(userPayments, month, currentYear)
+                        }
+                    }
+                    val statusSewa = when {
+                        paidCount >= 12 -> "Lunas"
+                        paidCount > 0 -> "Aktif"
+                        else -> "Tunggak"
+                    }
 
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color.White),

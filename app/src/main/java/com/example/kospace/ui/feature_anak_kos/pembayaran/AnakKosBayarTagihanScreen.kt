@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,7 +25,7 @@ import com.example.kospace.data.model.MonthPeriodHelper
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.theme.*
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnakKosBayarTagihanScreen(
     bulan: String,
@@ -56,6 +55,7 @@ fun AnakKosBayarTagihanScreen(
         mutableStateOf(if (defaultSelection != null) listOf(defaultSelection) else emptyList())
     }
     var nominalInput by remember { mutableStateOf("") }
+    var monthDropdownExpanded by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf("") }
     var isImageUploaded by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -104,69 +104,89 @@ fun AnakKosBayarTagihanScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "Pembayaran Untuk Bulan (Bisa pilih lebih dari satu & lintas tahun)",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = if (selectedMonths.isEmpty()) {
-                            "Pilih minimal 1 bulan yang belum lunas"
-                        } else {
-                            "Dipilih (${selectedMonths.size} bulan): ${selectedMonths.joinToString(", ")}"
-                        },
-                        fontSize = 12.sp,
-                        color = if (selectedMonths.isEmpty()) TextSecondary else PrimaryBlue,
-                        fontWeight = if (selectedMonths.isEmpty()) FontWeight.Normal else FontWeight.SemiBold,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
-                    )
-
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ExposedDropdownMenuBox(
+                        expanded = monthDropdownExpanded,
+                        onExpandedChange = { monthDropdownExpanded = !monthDropdownExpanded }
                     ) {
-                        upcomingMonths.forEach { option ->
-                            val isPaid = option.label in paidLabels
-                            val isSelected = option.label in selectedMonths
-                            val shortLabel = "${MonthPeriodHelper.shortMonthNames[option.monthNumber - 1]} ${option.year}"
+                        OutlinedTextField(
+                            value = if (selectedMonths.isEmpty()) "" else selectedMonths.joinToString(", "),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Pembayaran Untuk Bulan") },
+                            placeholder = { Text("Pilih satu atau beberapa bulan") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = monthDropdownExpanded)
+                            },
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                            modifier = Modifier
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                .fillMaxWidth()
+                        )
 
-                            FilterChip(
-                                selected = isSelected,
-                                enabled = !isPaid,
-                                onClick = {
-                                    selectedMonths = if (isSelected) {
-                                        selectedMonths - option.label
-                                    } else {
-                                        (selectedMonths + option.label).sortedBy { label ->
-                                            upcomingMonths.indexOfFirst { it.label == label }
+                        ExposedDropdownMenu(
+                            expanded = monthDropdownExpanded,
+                            onDismissRequest = { monthDropdownExpanded = false }
+                        ) {
+                            // Hanya tampilkan bulan yang belum lunas
+                            val availableMonths = upcomingMonths.filter { opt -> opt.label !in paidLabels }
+
+                            if (availableMonths.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = "Semua bulan sudah lunas ✓",
+                                            color = TextSecondary,
+                                            fontSize = 13.sp
+                                        )
+                                    },
+                                    enabled = false,
+                                    onClick = {}
+                                )
+                            } else {
+                                availableMonths.forEach { option ->
+                                    val isSelected = option.label in selectedMonths
+
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Checkbox(
+                                                    checked = isSelected,
+                                                    onCheckedChange = null
+                                                )
+                                                Text(
+                                                    text = option.label,
+                                                    color = TextPrimary
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            selectedMonths = if (isSelected) {
+                                                selectedMonths - option.label
+                                            } else {
+                                                (selectedMonths + option.label).sortedBy { label ->
+                                                    upcomingMonths.indexOfFirst { it.label == label }
+                                                }
+                                            }
+                                            errorMessage = null
                                         }
-                                    }
-                                    errorMessage = null
-                                },
-                                label = {
+                                    )
+                                }
+                            }
+
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = {
                                     Text(
-                                        text = if (isPaid) "$shortLabel (Lunas)" else shortLabel,
-                                        fontSize = 12.sp
+                                        text = "Selesai (${selectedMonths.size} bulan dipilih)",
+                                        fontWeight = FontWeight.Bold,
+                                        color = PrimaryBlue
                                     )
                                 },
-                                leadingIcon = if (isSelected) {
-                                    {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                } else null,
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = SurfaceLightBlue,
-                                    selectedLabelColor = PrimaryBlue,
-                                    selectedLeadingIconColor = PrimaryBlue,
-                                    disabledContainerColor = StatusGreenContainer,
-                                    disabledLabelColor = StatusGreen
-                                )
+                                onClick = { monthDropdownExpanded = false }
                             )
                         }
                     }
@@ -226,7 +246,7 @@ fun AnakKosBayarTagihanScreen(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = if (isImageUploaded) "✓ Resi_Transfer_BCA.jpg (Siap)" else "Klik untuk simulasi unggah foto bukti transfer",
+                                text = if (isImageUploaded) "✓ Resi_Transfer_BCA.jpg (Siap)" else "Klik untuk unggah foto bukti transfer",
                                 fontSize = 12.sp,
                                 color = if (isImageUploaded) StatusGreen else TextSecondary
                             )

@@ -39,20 +39,43 @@ object MonthPeriodHelper {
         return "${date.dayOfMonth} $shortMonth ${date.year}"
     }
 
-    fun isMonthPaidInPayments(
+    fun findPaidPayment(
         payments: List<PembayaranKos>,
         monthNumber: Int,
         year: Int
-    ): Boolean {
-        val fullName = fullMonthNames.getOrNull(monthNumber - 1) ?: return false
-        val shortName = shortMonthNames.getOrNull(monthNumber - 1) ?: return false
+    ): PembayaranKos? {
+        val fullName = fullMonthNames.getOrNull(monthNumber - 1) ?: return null
+        val shortName = shortMonthNames.getOrNull(monthNumber - 1) ?: return null
         val yearStr = year.toString()
-        return payments.any { p ->
+        return payments.firstOrNull { p ->
             p.status.equals("Lunas", ignoreCase = true) &&
                 p.monthPeriod.contains(yearStr) &&
                 (p.monthPeriod.contains(fullName, ignoreCase = true) ||
                     p.monthPeriod.startsWith(shortName, ignoreCase = true))
         }
+    }
+
+    fun isMonthPaidInPayments(
+        payments: List<PembayaranKos>,
+        monthNumber: Int,
+        year: Int
+    ): Boolean = findPaidPayment(payments, monthNumber, year) != null
+
+    fun parseMonthPeriodKey(monthPeriod: String): Int? {
+        val parts = monthPeriod.trim().split(" ")
+        val year = parts.lastOrNull()?.toIntOrNull() ?: return null
+        val monthPart = parts.firstOrNull() ?: return null
+        val monthNum = fullMonthNames.indexOfFirst { it.equals(monthPart, ignoreCase = true) }
+            .takeIf { it >= 0 }?.plus(1)
+            ?: shortMonthNames.indexOfFirst { it.equals(monthPart, ignoreCase = true) }
+                .takeIf { it >= 0 }?.plus(1)
+            ?: return null
+        return year * 100 + monthNum
+    }
+
+    fun getEarliestPaymentKey(payments: List<PembayaranKos>): Int {
+        val earliest = payments.mapNotNull { parseMonthPeriodKey(it.monthPeriod) }.minOrNull()
+        return earliest ?: (currentYear() * 100 + currentMonthNumber())
     }
 
     fun generateUpcomingMonths(monthsAhead: Int = 18): List<MonthYearOption> {

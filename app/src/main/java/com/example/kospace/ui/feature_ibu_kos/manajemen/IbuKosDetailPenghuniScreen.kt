@@ -1,7 +1,6 @@
 package com.example.kospace.ui.feature_ibu_kos.manajemen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -9,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -23,8 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kospace.data.model.PembayaranKos
 import com.example.kospace.ui.components.KospaceTopBar
+import com.example.kospace.ui.components.StatusSewaPagerCard
 import com.example.kospace.ui.theme.*
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun IbuKosDetailPenghuniScreen(
@@ -33,9 +35,15 @@ fun IbuKosDetailPenghuniScreen(
     viewModel: ManajemenPenghuniViewModel = viewModel()
 ) {
     val penghuniList by viewModel.penghuniAktif.collectAsStateWithLifecycle()
-    val monthStatuses by viewModel.monthStatuses.collectAsStateWithLifecycle()
+    val riwayatPembayaran by viewModel.riwayatPembayaran.collectAsStateWithLifecycle()
 
     val tenant = penghuniList.find { it.id == memberId }
+    var selectedProofPayment by remember { mutableStateOf<PembayaranKos?>(null) }
+    val rupiahFormatter = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     Scaffold(
         topBar = {
@@ -55,6 +63,10 @@ fun IbuKosDetailPenghuniScreen(
                 Text("Penghuni tidak ditemukan", color = TextSecondary)
             }
         } else {
+            val userPayments = remember(riwayatPembayaran, tenant.id) {
+                riwayatPembayaran.filter { it.tenantId == tenant.id }
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -89,7 +101,7 @@ fun IbuKosDetailPenghuniScreen(
                 )
 
                 Text(
-                    text = "Mahasiswa • Terdaftar sejak Jan 2026",
+                    text = "Terdaftar di Kos",
                     fontSize = 12.sp,
                     color = TextSecondary
                 )
@@ -121,70 +133,12 @@ fun IbuKosDetailPenghuniScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Grid Status Pembayaran (Menggunakan Flow/Row Chunks untuk menghindari nested scrolling)
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Status Pembayaran Sewa 2026",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-
-                        monthStatuses.chunked(4).forEach { rowItems ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                rowItems.forEach { item ->
-                                    val isPaidForThisTenant = if (tenant.id == "u3") item.monthNumber < 10 else item.isPaid
-
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .aspectRatio(1f)
-                                            .background(
-                                                if (isPaidForThisTenant) StatusGreenContainer else StatusOrangeContainer,
-                                                shape = RoundedCornerShape(10.dp)
-                                            )
-                                            .border(
-                                                width = 1.dp,
-                                                color = if (isPaidForThisTenant) StatusGreen else StatusOrange,
-                                                shape = RoundedCornerShape(10.dp)
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(
-                                                text = item.monthName,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (isPaidForThisTenant) StatusGreen else StatusOrange
-                                            )
-                                            if (isPaidForThisTenant) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Check,
-                                                    contentDescription = null,
-                                                    tint = StatusGreen,
-                                                    modifier = Modifier.size(14.dp)
-                                                )
-                                            } else {
-                                                Text("Tunggak", fontSize = 9.sp, color = StatusOrange)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                // Grid Status Pembayaran — HorizontalPager per tahun (format seragam)
+                StatusSewaPagerCard(
+                    titlePrefix = "Status Pembayaran Sewa",
+                    payments = userPayments,
+                    onPaidMonthClick = { payment -> selectedProofPayment = payment }
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -221,6 +175,57 @@ fun IbuKosDetailPenghuniScreen(
                 }
             }
         }
+    }
+
+    selectedProofPayment?.let { payment ->
+        AlertDialog(
+            onDismissRequest = { selectedProofPayment = null },
+            title = { Text("Bukti Transfer ${payment.monthPeriod}") },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Nominal: ${rupiahFormatter.format(payment.amount)}",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PrimaryBlue
+                    )
+                    Text(
+                        text = "Tanggal Bayar: ${payment.paymentDate}",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                    if (!payment.note.isNullOrBlank()) {
+                        Text(
+                            text = "Catatan: ${payment.note}",
+                            fontSize = 12.sp,
+                            color = TextSecondary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .background(SurfaceLightBlue, RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "[ Bukti Transfer: ${payment.proofImageUrl ?: "Resi Transfer"} ]",
+                            fontSize = 12.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedProofPayment = null }) {
+                    Text("Tutup")
+                }
+            }
+        )
     }
 }
 

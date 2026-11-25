@@ -28,7 +28,17 @@ class PembayaranViewModel(
         authRepository.currentUser
     ) { list, user ->
         if (user == null) emptyList()
-        else list.filter { it.tenantId == user.id }
+        else list
+            .filter { it.tenantId == user.id }
+            .sortedWith(compareByDescending<PembayaranKos> { p ->
+                // Parse "Nama_Bulan YYYY" → sort key: year * 100 + monthIndex
+                val parts = p.monthPeriod.trim().split(" ")
+                val year = parts.lastOrNull()?.toIntOrNull() ?: 0
+                val monthIdx = MonthPeriodHelper.fullMonthNames.indexOfFirst {
+                    it.equals(parts.firstOrNull() ?: "", ignoreCase = true)
+                }.let { if (it < 0) 0 else it + 1 }
+                year * 100 + monthIdx
+            })
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val monthStatuses: StateFlow<List<MonthStatus>> = combine(

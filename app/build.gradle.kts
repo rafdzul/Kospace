@@ -63,6 +63,9 @@ dependencies {
     implementation(libs.supabase.storage)
     implementation(libs.ktor.client.okhttp)
 
+    // Image loading
+    implementation(libs.coil.compose)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
