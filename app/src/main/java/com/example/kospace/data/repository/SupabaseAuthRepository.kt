@@ -39,7 +39,15 @@ object SupabaseAuthRepository : AuthRepository {
     private val _currentUser = MutableStateFlow<User?>(null)
     override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
+    private val _authError = MutableStateFlow<String?>(null)
+    override val authError: StateFlow<String?> = _authError.asStateFlow()
+
+    override fun clearError() {
+        _authError.value = null
+    }
+
     override fun login(emailOrPhone: String, role: String): Boolean {
+        _authError.value = null
         return try {
             var foundUser: User? = null
             runBlocking(Dispatchers.IO) {
@@ -61,8 +69,13 @@ object SupabaseAuthRepository : AuthRepository {
             }
 
             if (foundUser != null) {
-                _currentUser.value = foundUser
-                true
+                if (!foundUser!!.statusPenghuni.equals("Aktif", ignoreCase = true)) {
+                    _authError.value = "Akun Anda berstatus ${foundUser!!.statusPenghuni}. Silakan tunggu konfirmasi Ibu Kos."
+                    false
+                } else {
+                    _currentUser.value = foundUser
+                    true
+                }
             } else {
                 // Verifikasi akun demo bawaan sebagai fallback jika offline / belum ada di database
                 val isDemoIbu = role == "IBU_KOS" && (
@@ -81,16 +94,19 @@ object SupabaseAuthRepository : AuthRepository {
                     _currentUser.value = defaultAnakKos
                     true
                 } else {
+                    _authError.value = "Akun tidak ditemukan atau tidak sesuai peran."
                     false
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            _authError.value = "Terjadi kesalahan saat masuk. Coba lagi."
             false
         }
     }
 
     override fun register(name: String, email: String, phone: String, roomNumber: String?, role: String) {
+        val status = if (role == "ANAK_KOS") "Pending" else "Aktif"
         val newUser = User(
             id = "u_${System.currentTimeMillis()}",
             name = name,
@@ -99,13 +115,20 @@ object SupabaseAuthRepository : AuthRepository {
             role = role,
             roomNumber = roomNumber,
             kostName = "Kost Harmoni Utama",
-            statusPenghuni = if (role == "ANAK_KOS") "Pending" else "Aktif"
+            statusPenghuni = status
         )
-        _currentUser.value = newUser
+
+        // Hanya izinkan masuk ke sesi aplikasi jika status sudah Aktif (bukan Pending)
+        if (status.equals("Aktif", ignoreCase = true)) {
+            _currentUser.value = newUser
+        } else {
+            _currentUser.value = null
+        }
 
         scope.launch {
             try {
                 SupabaseClient.client.from("users").insert(newUser)
+                SupabaseAnakKosRepository.refresh()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

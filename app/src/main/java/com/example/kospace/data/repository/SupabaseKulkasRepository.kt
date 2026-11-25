@@ -26,17 +26,9 @@ object SupabaseKulkasRepository : KulkasRepository {
                     .from("kulkas")
                     .select()
                     .decodeList<ItemKulkas>()
-                if (result.isNotEmpty()) {
-                    _items.value = result
-                } else if (_items.value.isEmpty()) {
-                    // Pakai fallback dummy jika di database masih kosong
-                    _items.value = DummyKulkasRepository.items.value
-                }
+                _items.value = result
             } catch (e: Exception) {
                 e.printStackTrace()
-                if (_items.value.isEmpty()) {
-                    _items.value = DummyKulkasRepository.items.value
-                }
             }
         }
     }

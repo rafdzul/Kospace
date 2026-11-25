@@ -33,6 +33,7 @@ fun LoginScreen(
     onNavigateToRegister: (String) -> Unit
 ) {
     val selectedRole by viewModel.selectedRole.collectAsStateWithLifecycle()
+    val authError by viewModel.authError.collectAsStateWithLifecycle()
 
     var emailOrPhone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -165,9 +166,10 @@ fun LoginScreen(
                         )
                     }
 
-                    if (errorMessage != null) {
+                    val displayError = errorMessage ?: authError
+                    if (displayError != null) {
                         Text(
-                            text = errorMessage!!,
+                            text = displayError,
                             color = MaterialTheme.colorScheme.error,
                             fontSize = 12.sp,
                             modifier = Modifier.padding(vertical = 4.dp)
@@ -178,6 +180,7 @@ fun LoginScreen(
 
                     Button(
                         onClick = {
+                            viewModel.clearError()
                             if (emailOrPhone.isBlank() || password.isBlank()) {
                                 errorMessage = "Email/Nomor HP dan kata sandi wajib diisi"
                                 return@Button
@@ -186,7 +189,7 @@ fun LoginScreen(
                             if (success) {
                                 onLoginSuccess(selectedRole)
                             } else {
-                                errorMessage = "Akun tidak ditemukan atau tidak sesuai peran ${if (selectedRole == "IBU_KOS") "Ibu Kos" else "Anak Kos"}."
+                                errorMessage = authError ?: "Akun tidak ditemukan atau tidak sesuai peran ${if (selectedRole == "IBU_KOS") "Ibu Kos" else "Anak Kos"}."
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),

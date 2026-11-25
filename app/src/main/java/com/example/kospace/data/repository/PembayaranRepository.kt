@@ -7,5 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 interface PembayaranRepository {
     val monthStatuses: StateFlow<List<MonthStatus>>
     val riwayatPembayaran: StateFlow<List<PembayaranKos>>
+    fun refresh()
     fun kirimBuktiBayar(pembayaran: PembayaranKos)
 }

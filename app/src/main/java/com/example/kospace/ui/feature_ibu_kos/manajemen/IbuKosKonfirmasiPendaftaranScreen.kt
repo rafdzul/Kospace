@@ -31,6 +31,10 @@ fun IbuKosKonfirmasiPendaftaranScreen(
 ) {
     val pendingList by viewModel.pengajuanPending.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
     Scaffold(
         topBar = {
             KospaceTopBar(

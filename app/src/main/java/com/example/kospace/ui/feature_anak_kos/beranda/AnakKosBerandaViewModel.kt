@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kospace.data.model.ItemKulkas
 import com.example.kospace.data.model.LaporanKerusakan
+import com.example.kospace.data.model.MonthPeriodHelper
 import com.example.kospace.data.model.User
 import com.example.kospace.data.repository.*
 import kotlinx.coroutines.flow.*
@@ -17,9 +18,20 @@ class AnakKosBerandaViewModel(
 
     val currentUser: StateFlow<User?> = authRepository.currentUser
 
-    val isCurrentMonthPaid: StateFlow<Boolean> = pembayaranRepository.monthStatuses
-        .map { list -> list.find { it.monthNumber == 11 }?.isPaid == true }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val isCurrentMonthPaid: StateFlow<Boolean> = combine(
+        pembayaranRepository.riwayatPembayaran,
+        authRepository.currentUser
+    ) { list, user ->
+        if (user == null) false
+        else {
+            val userPayments = list.filter { it.tenantId == user.id }
+            MonthPeriodHelper.isMonthPaidInPayments(
+                payments = userPayments,
+                monthNumber = MonthPeriodHelper.currentMonthNumber(),
+                year = MonthPeriodHelper.currentYear()
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val myActiveReport: StateFlow<LaporanKerusakan?> = kerusakanRepository.laporanList
         .map { list -> list.firstOrNull { it.status != "Selesai" } }

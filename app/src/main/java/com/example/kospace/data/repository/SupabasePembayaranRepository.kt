@@ -15,32 +15,46 @@ import kotlinx.coroutines.launch
 object SupabasePembayaranRepository : PembayaranRepository {
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    private val _monthStatuses = MutableStateFlow(DummyPembayaranRepository.monthStatuses.value)
+    private val _monthStatuses = MutableStateFlow(
+        listOf(
+            MonthStatus("Jan", 1, false),
+            MonthStatus("Feb", 2, false),
+            MonthStatus("Mar", 3, false),
+            MonthStatus("Apr", 4, false),
+            MonthStatus("Mei", 5, false),
+            MonthStatus("Jun", 6, false),
+            MonthStatus("Jul", 7, false),
+            MonthStatus("Agu", 8, false),
+            MonthStatus("Sep", 9, false),
+            MonthStatus("Okt", 10, false),
+            MonthStatus("Nov", 11, false),
+            MonthStatus("Des", 12, false)
+        )
+    )
     override val monthStatuses: StateFlow<List<MonthStatus>> = _monthStatuses.asStateFlow()
 
-    private val _riwayatPembayaran = MutableStateFlow(DummyPembayaranRepository.riwayatPembayaran.value)
+    private val _riwayatPembayaran = MutableStateFlow<List<PembayaranKos>>(emptyList())
     override val riwayatPembayaran: StateFlow<List<PembayaranKos>> = _riwayatPembayaran.asStateFlow()
 
     init {
         refresh()
     }
 
-    fun refresh() {
+    override fun refresh() {
         scope.launch {
             try {
                 val list = SupabaseClient.client
                     .from("pembayaran_kos")
                     .select()
                     .decodeList<PembayaranKos>()
-                if (list.isNotEmpty()) {
-                    _riwayatPembayaran.value = list
-                    _monthStatuses.update { months ->
-                        months.map { m ->
-                            val isPaidInDb = list.any { p ->
-                                p.monthPeriod.startsWith(m.monthName, ignoreCase = true) && p.status == "Lunas"
-                            }
-                            if (isPaidInDb) m.copy(isPaid = true) else m
+                _riwayatPembayaran.value = list
+                _monthStatuses.update { months ->
+                    months.map { m ->
+                        val isPaidInDb = list.any { p ->
+                            p.monthPeriod.startsWith(m.monthName, ignoreCase = true) &&
+                                p.status.equals("Lunas", ignoreCase = true)
                         }
+                        m.copy(isPaid = isPaidInDb)
                     }
                 }
             } catch (e: Exception) {

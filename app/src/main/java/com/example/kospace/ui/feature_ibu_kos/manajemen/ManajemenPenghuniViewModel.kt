@@ -18,6 +18,10 @@ class ManajemenPenghuniViewModel(
     val pengajuanPending: StateFlow<List<User>> = anakKosRepository.pengajuanPending
     val monthStatuses: StateFlow<List<MonthStatus>> = pembayaranRepository.monthStatuses
 
+    fun refresh() {
+        anakKosRepository.refresh()
+    }
+
     fun getPenghuniById(id: String): User? {
         return penghuniAktif.value.find { it.id == id }
     }
