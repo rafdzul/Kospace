@@ -46,12 +46,15 @@ class KerusakanViewModel(
         description: String,
         imageUrl: String? = null
     ) {
-        val user = currentUser.value
+        val user = currentUser.value?: return
+
+        if (user.name.isBlank()) return
+
         val report = LaporanKerusakan(
             id = "${System.currentTimeMillis()}",
             ticketCode = "REP-00${(4..99).random()}",
-            tenantId = user?.id ?: "u2",
-            tenantName = user?.name ?: "Dimas Saputra",
+            tenantId = user.id,
+            tenantName = user.name,
             roomNumber = user?.roomNumber ?: "Kamar 04",
             title = title,
             categoryLocation = locationCategory,

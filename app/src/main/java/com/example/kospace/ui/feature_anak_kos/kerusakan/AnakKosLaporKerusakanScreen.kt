@@ -19,8 +19,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material.icons.filled.Person
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.theme.*
+
 
 @Composable
 fun AnakKosLaporKerusakanScreen(
@@ -28,6 +30,8 @@ fun AnakKosLaporKerusakanScreen(
     onReportSubmitted: () -> Unit,
     viewModel: KerusakanViewModel = viewModel()
 ) {
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val reporterName = currentUser?.name.orEmpty()
     var locationCategory by remember { mutableStateOf("Kamar Mandi Dalam") }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -55,6 +59,24 @@ fun AnakKosLaporKerusakanScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
+                    OutlinedTextField(
+                        value = reporterName,
+                        onValueChange = {},
+                        label = { Text("Nama Pelapor") },
+                        placeholder = { Text("Nama pengguna yang login") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        readOnly = true,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Nama Pelapor"
+                            )
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     OutlinedTextField(
                         value = locationCategory,
                         onValueChange = { locationCategory = it },
@@ -146,7 +168,7 @@ fun AnakKosLaporKerusakanScreen(
 
                         Button(
                             onClick = {
-                                if (title.isNotBlank()) {
+                                if (title.isNotBlank() && reporterName.isNotBlank()) {
                                     viewModel.tambahLaporan(
                                         title = title,
                                         locationCategory = locationCategory,

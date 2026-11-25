@@ -90,6 +90,14 @@ fun AnakKosDetailKerusakanScreen(
                             modifier = Modifier.padding(top = 2.dp)
                         )
 
+                        Text(
+                            text = "Nama Pelapor: ${report.tenantName}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextPrimary,
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Box(
