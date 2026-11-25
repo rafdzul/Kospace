@@ -56,6 +56,7 @@ class KulkasViewModel(
         quantity: Int,
         unit: String,
         expirationDate: String,
+        addedDate: String,
         note: String?
     ) {
         val user = currentUser.value
@@ -69,7 +70,7 @@ class KulkasViewModel(
             unit = unit,
             expirationDate = expirationDate,
             note = note?.ifBlank { null },
-            addedDate = "Hari ini"
+            addedDate = addedDate
         )
         kulkasRepository.tambahItem(newItem)
     }

@@ -154,6 +154,11 @@ fun AnakKosKulkasScreen(
                                         color = TextSecondary
                                     )
                                     Text(
+                                        text = "Masuk: ${item.addedDate}",
+                                        fontSize = 11.sp,
+                                        color = TextSecondary
+                                    )
+                                    Text(
                                         text = "Exp: ${item.expirationDate}",
                                         fontSize = 11.sp,
                                         color = StatusOrange,
