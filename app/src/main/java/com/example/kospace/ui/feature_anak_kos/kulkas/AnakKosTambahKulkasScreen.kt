@@ -1,5 +1,10 @@
 package com.example.kospace.ui.feature_anak_kos.kulkas
 
+import androidx.compose.material.icons.filled.DateRange
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +44,19 @@ fun AnakKosTambahKulkasScreen(
 
     val unitOptions = listOf("Botol", "Porsi", "Lembar", "Slice", "Pcs", "Pack")
     var unitDropdownExpanded by remember { mutableStateOf(false) }
+
+    // tambahan
+    var addedDate by remember {
+        mutableStateOf(
+            SimpleDateFormat("dd MMM yyyy", Locale("id", "ID")).format(Date())
+        )
+    }
+
+    var showAddedDatePicker by remember { mutableStateOf(false) }
+
+    var showExpirationDatePicker by remember {
+        mutableStateOf(false)
+    }
 
     Scaffold(
         topBar = {
@@ -140,15 +158,124 @@ fun AnakKosTambahKulkasScreen(
                         }
                     }
 
+                    // tambahan
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    OutlinedTextField(
+                        value = addedDate,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Tanggal Masuk Kulkas") },
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                showAddedDatePicker = true
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Pilih tanggal masuk"
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                showAddedDatePicker = true
+                            }
+                    )
+
+                    if (showAddedDatePicker) {
+                        val datePickerState = rememberDatePickerState(
+                            initialSelectedDateMillis = System.currentTimeMillis()
+                        )
+
+                        DatePickerDialog(
+                            onDismissRequest = {
+                                showAddedDatePicker = false
+                            },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        addedDate = SimpleDateFormat(
+                                            "dd MMM yyyy",
+                                            Locale("id", "ID")
+                                        ).apply {
+                                            timeZone = TimeZone.getTimeZone("UTC")
+                                        }.format(Date(millis))
+                                    }
+                                    showAddedDatePicker = false
+                                }) {
+                                    Text("Pilih")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = {
+                                    showAddedDatePicker = false
+                                }) {
+                                    Text("Batal")
+                                }
+                            }
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(14.dp))
 
                     OutlinedTextField(
                         value = expirationDate,
-                        onValueChange = { expirationDate = it },
+                        onValueChange = {},
+                        readOnly = true,
                         label = { Text("Tanggal Kedaluwarsa") },
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                showExpirationDatePicker = true
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Pilih tanggal kedaluwarsa"
+                                )
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+
+                    if (showExpirationDatePicker) {
+                        val expirationPickerState = rememberDatePickerState(
+                            initialSelectedDateMillis = System.currentTimeMillis()
+                        )
+
+                        DatePickerDialog(
+                            onDismissRequest = {
+                                showExpirationDatePicker = false
+                            },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    expirationPickerState.selectedDateMillis?.let { millis ->
+                                        expirationDate = SimpleDateFormat(
+                                            "dd MMM yyyy",
+                                            Locale("id", "ID")
+                                        ).apply {
+                                            timeZone = TimeZone.getTimeZone("UTC")
+                                        }.format(Date(millis))
+                                    }
+
+                                    showExpirationDatePicker = false
+                                }) {
+                                    Text("Pilih")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = {
+                                    showExpirationDatePicker = false
+                                }) {
+                                    Text("Batal")
+                                }
+                            }
+                        ) {
+                            DatePicker(state = expirationPickerState)
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -226,6 +353,7 @@ fun AnakKosTambahKulkasScreen(
                                         quantity = quantity,
                                         unit = unit,
                                         expirationDate = expirationDate,
+                                        addedDate = addedDate,
                                         note = note
                                     )
                                     onItemAdded()
