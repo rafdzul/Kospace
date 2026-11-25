@@ -13,12 +13,18 @@ class AuthViewModel(
 ) : ViewModel() {
 
     val currentUser: StateFlow<User?> = authRepository.currentUser
+    val authError: StateFlow<String?> = authRepository.authError
 
     private val _selectedRole = MutableStateFlow("ANAK_KOS")
     val selectedRole: StateFlow<String> = _selectedRole.asStateFlow()
 
     fun selectRole(role: String) {
         _selectedRole.value = role
+        authRepository.clearError()
+    }
+
+    fun clearError() {
+        authRepository.clearError()
     }
 
     fun login(emailOrPhone: String, password: String): Boolean {

@@ -39,6 +39,10 @@ fun IbuKosBerandaScreen(
     val pendingList by viewModel.pendingList.collectAsStateWithLifecycle()
     val pendingReportCount by viewModel.pendingReportCount.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

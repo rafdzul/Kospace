@@ -27,16 +27,9 @@ object SupabaseKerusakanRepository : KerusakanRepository {
                     .from("laporan_kerusakan")
                     .select()
                     .decodeList<LaporanKerusakan>()
-                if (result.isNotEmpty()) {
-                    _laporanList.value = result
-                } else if (_laporanList.value.isEmpty()) {
-                    _laporanList.value = DummyKerusakanRepository.laporanList.value
-                }
+                _laporanList.value = result
             } catch (e: Exception) {
                 e.printStackTrace()
-                if (_laporanList.value.isEmpty()) {
-                    _laporanList.value = DummyKerusakanRepository.laporanList.value
-                }
             }
         }
     }

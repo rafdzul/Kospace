@@ -45,6 +45,7 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var termsAccepted by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showPendingDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -190,7 +191,11 @@ fun RegisterScreen(
                                     password = password
                                 )
                                 if (ok) {
-                                    onRegisterSuccess(selectedRole)
+                                    if (selectedRole == "ANAK_KOS") {
+                                        showPendingDialog = true
+                                    } else {
+                                        onRegisterSuccess(selectedRole)
+                                    }
                                 } else {
                                     errorMessage = "Lengkapi data form dengan benar"
                                 }
@@ -224,5 +229,35 @@ fun RegisterScreen(
                 )
             }
         }
+    }
+    if (showPendingDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showPendingDialog = false
+                onNavigateToLogin()
+            },
+            title = {
+                Text(
+                    text = "Pendaftaran Terkirim",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Akun Anda berhasil didaftarkan dan saat ini berstatus Pending. Silakan tunggu konfirmasi dari Ibu Kos sebelum dapat masuk ke aplikasi."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPendingDialog = false
+                        onNavigateToLogin()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                ) {
+                    Text("Ok")
+                }
+            }
+        )
     }
 }

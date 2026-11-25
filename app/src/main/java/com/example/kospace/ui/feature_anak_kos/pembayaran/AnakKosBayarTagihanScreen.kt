@@ -6,23 +6,27 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kospace.data.model.MonthPeriodHelper
 import com.example.kospace.ui.components.KospaceTopBar
 import com.example.kospace.ui.theme.*
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AnakKosBayarTagihanScreen(
     bulan: String,
@@ -32,11 +36,33 @@ fun AnakKosBayarTagihanScreen(
     viewModel: PembayaranViewModel = viewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val riwayatPembayaran by viewModel.riwayatPembayaran.collectAsStateWithLifecycle()
 
-    var selectedBulan by remember { mutableStateOf(bulan) }
-    var nominalInput by remember { mutableStateOf(nominal.toLong().toString()) }
+    val upcomingMonths = remember { MonthPeriodHelper.generateUpcomingMonths(18) }
+
+    val paidLabels = remember(riwayatPembayaran, upcomingMonths) {
+        upcomingMonths
+            .filter { opt ->
+                MonthPeriodHelper.isMonthPaidInPayments(riwayatPembayaran, opt.monthNumber, opt.year)
+            }
+            .map { it.label }
+            .toSet()
+    }
+
+    var selectedMonths by remember(bulan, paidLabels) {
+        val defaultSelection = upcomingMonths
+            .firstOrNull { it.label.equals(bulan, ignoreCase = true) && it.label !in paidLabels }
+            ?.label
+        mutableStateOf(if (defaultSelection != null) listOf(defaultSelection) else emptyList())
+    }
+    var nominalInput by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var isImageUploaded by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     Scaffold(
         topBar = {
@@ -69,28 +95,96 @@ fun AnakKosBayarTagihanScreen(
                     )
 
                     OutlinedTextField(
-                        value = currentUser?.name ?: "Dimas Saputra",
+                        value = currentUser?.name ?: "-",
                         onValueChange = {},
                         enabled = false,
                         label = { Text("Pembayaran Atas Nama") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    OutlinedTextField(
-                        value = selectedBulan,
-                        onValueChange = { selectedBulan = it },
-                        label = { Text("Pembayaran Untuk Bulan") },
-                        modifier = Modifier.fillMaxWidth()
+                    Text(
+                        text = "Pembayaran Untuk Bulan (Bisa pilih lebih dari satu & lintas tahun)",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = if (selectedMonths.isEmpty()) {
+                            "Pilih minimal 1 bulan yang belum lunas"
+                        } else {
+                            "Dipilih (${selectedMonths.size} bulan): ${selectedMonths.joinToString(", ")}"
+                        },
+                        fontSize = 12.sp,
+                        color = if (selectedMonths.isEmpty()) TextSecondary else PrimaryBlue,
+                        fontWeight = if (selectedMonths.isEmpty()) FontWeight.Normal else FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        upcomingMonths.forEach { option ->
+                            val isPaid = option.label in paidLabels
+                            val isSelected = option.label in selectedMonths
+                            val shortLabel = "${MonthPeriodHelper.shortMonthNames[option.monthNumber - 1]} ${option.year}"
+
+                            FilterChip(
+                                selected = isSelected,
+                                enabled = !isPaid,
+                                onClick = {
+                                    selectedMonths = if (isSelected) {
+                                        selectedMonths - option.label
+                                    } else {
+                                        (selectedMonths + option.label).sortedBy { label ->
+                                            upcomingMonths.indexOfFirst { it.label == label }
+                                        }
+                                    }
+                                    errorMessage = null
+                                },
+                                label = {
+                                    Text(
+                                        text = if (isPaid) "$shortLabel (Lunas)" else shortLabel,
+                                        fontSize = 12.sp
+                                    )
+                                },
+                                leadingIcon = if (isSelected) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                } else null,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = SurfaceLightBlue,
+                                    selectedLabelColor = PrimaryBlue,
+                                    selectedLeadingIconColor = PrimaryBlue,
+                                    disabledContainerColor = StatusGreenContainer,
+                                    disabledLabelColor = StatusGreen
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     OutlinedTextField(
                         value = nominalInput,
-                        onValueChange = { nominalInput = it },
+                        onValueChange = { input ->
+                            if (input.all { it.isDigit() }) {
+                                nominalInput = input
+                                errorMessage = null
+                            }
+                        },
                         label = { Text("Nominal yang Ditransfer (Rp)") },
+                        placeholder = { Text("Masukkan nominal transfer, misal: 1500000") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -117,7 +211,10 @@ fun AnakKosBayarTagihanScreen(
                                 color = if (isImageUploaded) StatusGreen else CardBorderDivider,
                                 shape = RoundedCornerShape(12.dp)
                             )
-                            .clickable { isImageUploaded = !isImageUploaded },
+                            .clickable {
+                                isImageUploaded = !isImageUploaded
+                                errorMessage = null
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -146,6 +243,15 @@ fun AnakKosBayarTagihanScreen(
                         minLines = 2
                     )
 
+                    if (errorMessage != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = errorMessage!!,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Row(
@@ -164,13 +270,26 @@ fun AnakKosBayarTagihanScreen(
 
                         Button(
                             onClick = {
-                                val amountVal = nominalInput.toDoubleOrNull() ?: 1500000.0
-                                viewModel.kirimBuktiBayar(
-                                    monthPeriod = selectedBulan,
-                                    amount = amountVal,
-                                    note = note
-                                )
-                                onPaymentSubmitted()
+                                val amountVal = nominalInput.toDoubleOrNull()
+                                when {
+                                    selectedMonths.isEmpty() -> {
+                                        errorMessage = "Silakan pilih minimal 1 bulan pembayaran"
+                                    }
+                                    amountVal == null || amountVal <= 0 -> {
+                                        errorMessage = "Masukkan nominal transfer yang valid (lebih dari 0)"
+                                    }
+                                    !isImageUploaded -> {
+                                        errorMessage = "Silakan unggah bukti transfer terlebih dahulu"
+                                    }
+                                    else -> {
+                                        viewModel.kirimBuktiBayar(
+                                            monthPeriods = selectedMonths,
+                                            totalAmount = amountVal,
+                                            note = note
+                                        )
+                                        onPaymentSubmitted()
+                                    }
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                             shape = RoundedCornerShape(10.dp),

@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface AnakKosRepository {
     val penghuniAktif: StateFlow<List<User>>
     val pengajuanPending: StateFlow<List<User>>
+    fun refresh()
     fun terimaPendaftaran(userId: String)
     fun tolakPendaftaran(userId: String)
     fun keluarkanPenghuni(userId: String)

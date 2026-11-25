@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kospace.data.model.MonthPeriodHelper
 import com.example.kospace.ui.components.StatusBadge
 import com.example.kospace.ui.theme.*
 import java.text.NumberFormat
@@ -34,6 +35,10 @@ fun AnakKosPembayaranScreen(
 
     var showProofDialog by remember { mutableStateOf<String?>(null) }
     val rupiahFormatter = remember { NumberFormat.getCurrencyInstance(Locale("id", "ID")) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     Column(
         modifier = Modifier
@@ -58,7 +63,7 @@ fun AnakKosPembayaranScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Status Sewa Tahun 2026",
+                    text = "Status Sewa Tahun ${viewModel.currentYear}",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -118,7 +123,18 @@ fun AnakKosPembayaranScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { onNavigateToBayarTagihan("November 2026", 1500000.0) },
+                    onClick = {
+                        val upcoming = MonthPeriodHelper.generateUpcomingMonths(18)
+                        val firstUnpaid = upcoming.firstOrNull { opt ->
+                            !viewModel.isMonthYearPaid(opt.monthNumber, opt.year)
+                        }
+                        val targetMonth = firstUnpaid?.label
+                            ?: MonthPeriodHelper.fullMonthYear(
+                                MonthPeriodHelper.currentMonthNumber(),
+                                MonthPeriodHelper.currentYear()
+                            )
+                        onNavigateToBayarTagihan(targetMonth, 0.0)
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()

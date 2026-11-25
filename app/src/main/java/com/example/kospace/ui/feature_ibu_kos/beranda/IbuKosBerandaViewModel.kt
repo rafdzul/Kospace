@@ -21,4 +21,8 @@ class IbuKosBerandaViewModel(
     val pendingReportCount: StateFlow<Int> = kerusakanRepository.laporanList
         .map { list -> list.count { it.status == "Pending" || it.status == "Diproses" } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    fun refresh() {
+        anakKosRepository.refresh()
+    }
 }
